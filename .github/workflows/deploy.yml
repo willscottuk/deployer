@@ -70,7 +70,7 @@ jobs:
           WIRE_SECRET: ${{ secrets.WIRE_SECRET }}
         with:
           private-key: ${{ secrets.PRIVATE_KEY }}
-          dep: deplot:version:prepare
+          dep: deploy:version:prepare
 
       - name: Commit Changes
         uses: stefanzweifel/git-auto-commit-action@v5
