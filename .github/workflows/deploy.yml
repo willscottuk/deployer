@@ -56,17 +56,18 @@ jobs:
       - name: Deploy
         uses: deployphp/action@v1
         env:
-          DEPLOYER_USER: ${{ secrets.DEPLOYER_USER }}
-          DEPLOYER_HOSTNAME: ${{ secrets.DEPLOYER_HOSTNAME }}
-          DEPLOYER_PATH: ${{ secrets.DEPLOYER_PATH }}
-          DEPLOYER_APP: ${{ secrets.DEPLOYER_APP }}
-          DEPLPOYER_REPO: ${{ secrets.DEPLOYER_REPO }}
-          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
-          SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
+          DEPLOYER_USER: ${{ env.DEPLOYER_USER }}
+          DEPLOYER_HOSTNAME: ${{ env.DEPLOYER_HOSTNAME }}
+          DEPLOYER_PATH: ${{ env.DEPLOYER_PATH }}
+          DEPLOYER_APP: ${{ env.DEPLOYER_APP }}
+          DEPLPOYER_REPO: ${{ env.DEPLOYER_REPO }}
+          SENTRY_ORG: ${{ env.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ env.SENTRY_PROJECT }}
           SENTRY_TOKEN: ${{ secrets.SENTRY_TOKEN }}
-          SENTRY_PREFIX: ${{ secrets.SENTRY_PREFIX }}
-          SENTRY_SERVER: ${{ secrets.SENTRY_SERVER }}
-          SENTRY_PROJECT_ARRAY: ${{ secrets.SENTRY_PROJECT_ARRAY }}
+          SENTRY_PREFIX: ${{ env.SENTRY_PREFIX }}
+          SENTRY_SERVER: ${{ env.SENTRY_SERVER }}
+          SENTRY_PROJECT_ARRAY: ${{ env.SENTRY_PROJECT_ARRAY }}
+          WIRE_SECRET: ${{ secrets.WIRE_SECRET }}
         with:
           private-key: ${{ secrets.PRIVATE_KEY }}
           dep: deploy
