@@ -48,7 +48,7 @@ jobs:
           php-version: "8.1"
 
       - name: Add Wire Credentials Loaded From ENV
-        run: composer config http-basic.wire-elements-pro.composer.sh "${{ secrets.WIRE_SECRET}}"
+        run: composer config http-basic.wire-elements-pro.composer.sh ${{ secrets.WIRE_SECRET}}
 
       - name: Install Dependencies
         run: composer install --no-interaction --prefer-dist --optimize-autoloader
