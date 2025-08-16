@@ -13,7 +13,7 @@ require 'contrib/sentry.php';
 // Config
 set('application', getenv('DEPLOYER_APP'));
 set('repository', getenv('DEPLPOYER_REPO'));
-set('php_fpm_version', '8.1');
+set('php_fpm_version', '8.2');
 set('cleanup_use_sudo', true);
 set('keep_releases', 3);
 
