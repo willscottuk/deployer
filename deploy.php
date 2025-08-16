@@ -69,7 +69,7 @@ task('version:prepare', function () {
   set('sentry', [
     'organization' => getenv('SENTRY_ORG'),
     'projects' => [
-      getenv('DEPLOYER_PROJECT_ARRAY')
+      getenv('SENTRY_PROJECT_ARRAY')
     ],
     'token' => getenv('SENTRY_TOKEN'),
     'environment' => 'production',
