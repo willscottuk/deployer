@@ -53,6 +53,33 @@ jobs:
       - name: Install Dependencies
         run: composer install --no-interaction --prefer-dist --optimize-autoloader
 
+      - name: Absorb Version
+        uses: deployphp/action@v1
+        env:
+          DEPLOYER_USER: ${{ vars.DEPLOYER_USER }}
+          DEPLOYER_HOSTNAME: ${{ vars.DEPLOYER_HOSTNAME }}
+          DEPLOYER_PATH: ${{ vars.DEPLOYER_PATH }}
+          DEPLOYER_APP: ${{ vars.DEPLOYER_APP }}
+          DEPLPOYER_REPO: ${{ vars.DEPLOYER_REPO }}
+          SENTRY_ORG: ${{ vars.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ vars.SENTRY_PROJECT }}
+          SENTRY_TOKEN: ${{ secrets.SENTRY_TOKEN }}
+          SENTRY_PREFIX: ${{ vars.SENTRY_PREFIX }}
+          SENTRY_SERVER: ${{ vars.SENTRY_SERVER }}
+          SENTRY_PROJECT_ARRAY: ${{ vars.SENTRY_PROJECT_ARRAY }}
+          WIRE_SECRET: ${{ secrets.WIRE_SECRET }}
+        with:
+          private-key: ${{ secrets.PRIVATE_KEY }}
+
+      - name: Commit Changes
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: ":pushpin: Update version to v${{ steps.version.outputs.version }}"
+          commit_options: "--no-verify"
+          file_pattern: |
+            **/*
+            !.github/workflows/*
+
       - name: Deploy
         uses: deployphp/action@v1
         env:
