@@ -61,7 +61,7 @@ task('composer:prepare', function () {
   run('sudo docker exec -t -w {{release_path}} swag /config/php/composer.phar config http-basic.wire-elements-pro.composer.sh %secret%', secret: getenv('WIRE_SECRET'));
 });
 
-task('version:absorb', artisan('version:absorb'));
+task('version:absorb', runLocally('php artisan version:absorb'));
 after('deploy', 'deploy:sentry:once');
 
 task('version:prepare', function () {
