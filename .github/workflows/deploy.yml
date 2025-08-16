@@ -55,6 +55,18 @@ jobs:
 
       - name: Deploy
         uses: deployphp/action@v1
+        env:
+          DEPLOYER_USER: ${{ secrets.DEPLOYER_USER }}
+          DEPLOYER_HOSTNAME: ${{ secrets.DEPLOYER_HOSTNAME }}
+          DEPLOYER_PATH: ${{ secrets.DEPLOYER_PATH }}
+          DEPLOYER_APP: ${{ secrets.DEPLOYER_APP }}
+          DEPLPOYER_REPO: ${{ secrets.DEPLOYER_REPO }}
+          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
+          SENTRY_TOKEN: ${{ secrets.SENTRY_TOKEN }}
+          SENTRY_PREFIX: ${{ secrets.SENTRY_PREFIX }}
+          SENTRY_SERVER: ${{ secrets.SENTRY_SERVER }}
+          SENTRY_PROJECT_ARRAY: ${{ secrets.SENTRY_PROJECT_ARRAY }}
         with:
           private-key: ${{ secrets.PRIVATE_KEY }}
           dep: deploy
