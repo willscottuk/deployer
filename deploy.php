@@ -35,7 +35,7 @@ host('prod')
   ->set('bin/composer', 'sudo docker exec -t -w {{release_path}} swag /config/php/composer.phar');
 
 task('deploy', [
-  'verssion:absorb',
+  'version:absorb',
   'version:prepare',
   'deploy:prepare',
   'composer:prepare',
