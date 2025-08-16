@@ -75,6 +75,7 @@ jobs:
 
       - name: Commit Changes
         uses: stefanzweifel/git-auto-commit-action@v5
+        id: auto_commit_action
         with:
           commit_message: ":pushpin: Update version"
           commit_options: "--no-verify"
@@ -84,7 +85,7 @@ jobs:
             **/*
             !.github/workflows/*
 
-      - name: Ignore Duster commit in git blame
+      - name: Ignore commit in git blame
         if: steps.auto_commit_action.outputs.changes_detected == 'true'
         run: echo ${{ steps.auto_commit_action.outputs.commit_hash }} >> .git-blame-ignore-revs
 

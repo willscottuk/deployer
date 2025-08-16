@@ -68,9 +68,7 @@ task('version:prepare', function () {
   $commit = substr(runLocally('git rev-parse --verify HEAD'), 0, 6);
   set('sentry', [
     'organization' => getenv('SENTRY_ORG'),
-    'projects' => [
-      getenv('SENTRY_PROJECT_ARRAY')
-    ],
+    'projects' => getenv('SENTRY_PROJECT_ARRAY'),
     'token' => getenv('SENTRY_TOKEN'),
     'environment' => 'production',
     'version' => $ver . '+' . $commit,
