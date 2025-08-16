@@ -90,6 +90,7 @@ task('npm:run:prod', function () {
 
 task('deploy:sentry:once', function () {
   try {
+    echo (get('sentry'));
     invoke('deploy:sentry');
   } catch (Exception $e) {
     info('Unable to push release or deploy to Sentry : ' . $e->getMessage());
