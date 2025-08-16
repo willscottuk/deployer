@@ -53,34 +53,6 @@ jobs:
       - name: Install Dependencies
         run: composer install --no-interaction --prefer-dist --optimize-autoloader
 
-      - name: Absorb Version
-        uses: deployphp/action@v1
-        env:
-          DEPLOYER_USER: ${{ vars.DEPLOYER_USER }}
-          DEPLOYER_HOSTNAME: ${{ vars.DEPLOYER_HOSTNAME }}
-          DEPLOYER_PATH: ${{ vars.DEPLOYER_PATH }}
-          DEPLOYER_APP: ${{ vars.DEPLOYER_APP }}
-          DEPLPOYER_REPO: ${{ vars.DEPLOYER_REPO }}
-          SENTRY_ORG: ${{ vars.SENTRY_ORG }}
-          SENTRY_PROJECT: ${{ vars.SENTRY_PROJECT }}
-          SENTRY_TOKEN: ${{ secrets.SENTRY_TOKEN }}
-          SENTRY_PREFIX: ${{ vars.SENTRY_PREFIX }}
-          SENTRY_SERVER: ${{ vars.SENTRY_SERVER }}
-          SENTRY_PROJECT_ARRAY: ${{ vars.SENTRY_PROJECT_ARRAY }}
-          WIRE_SECRET: ${{ secrets.WIRE_SECRET }}
-        with:
-          private-key: ${{ secrets.PRIVATE_KEY }}
-          dep: deploy:version:prepare
-
-      - name: Commit Changes
-        uses: stefanzweifel/git-auto-commit-action@v5
-        with:
-          commit_message: ":pushpin: Update version to v${{ steps.version.outputs.version }}"
-          commit_options: "--no-verify"
-          file_pattern: |
-            **/*
-            !.github/workflows/*
-
       - name: Deploy
         uses: deployphp/action@v1
         env:
@@ -99,3 +71,24 @@ jobs:
         with:
           private-key: ${{ secrets.PRIVATE_KEY }}
           dep: deploy
+
+      - name: Commit Changes
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: ":pushpin: Update version to v${{ steps.version.outputs.version }}"
+          commit_options: "--no-verify"
+          commit_user_name: GitHub Action
+          commit_user_email: actions@github.com
+          file_pattern: |
+            **/*
+            !.github/workflows/*
+
+      - name: Ignore Duster commit in git blame
+        if: steps.auto_commit_action.outputs.changes_detected == 'true'
+        run: echo ${{ steps.auto_commit_action.outputs.commit_hash }} >> .git-blame-ignore-revs
+
+      - uses: stefanzweifel/git-auto-commit-action@b863ae1933cb653a53c021fe36dbb774e1fb9403 # v5
+        with:
+          commit_message: ":pushpin: Ignoring version commit in git blame"
+          commit_user_name: GitHub Action
+          commit_user_email: actions@github.com
