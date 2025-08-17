@@ -2,8 +2,6 @@
 
 namespace Deployer;
 
-use Exception;
-
 require 'recipe/laravel.php';
 require 'contrib/php-fpm.php';
 require 'contrib/npm.php';
@@ -69,8 +67,6 @@ task('composer:prepare', function () {
     run('sudo docker exec -t -w {{release_path}} swag /config/php/composer.phar config http-basic.wire-elements-pro.composer.sh %secret%', secret: getenv('WIRE_SECRET'));
 });
 
-// after('deploy', 'deploy:sentry:once');
-
 task('version:prepare', function () {
     $absorb = runLocally('php artisan version:absorb');
     $ver = runLocally('php artisan version:show --format=version-only --suppress-app-name');
@@ -97,16 +93,6 @@ task('version:set', function () {
 task('npm:run:prod', function () {
     run('sudo docker exec -t -w {{release_path}} swag npm run build');
 });
-
-// task('deploy:sentry:once', function () {
-//   try {
-//     $sentry = get('sentry');
-//     print_r($sentry);
-//     invoke('deploy:sentry');
-//   } catch (Exception $e) {
-//     info('Unable to push release or deploy to Sentry : ' . $e->getMessage());
-//   }
-// })->once();
 
 after('deploy:failed', 'deploy:unlock');
 after('deploy:success', 'crontab:sync');
