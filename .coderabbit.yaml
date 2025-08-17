@@ -42,6 +42,7 @@ reviews:
     labels: []
     drafts: false
     base_branches: [dev]
+    ignore_base_branches: [main]
   finishing_touches:
     docstrings:
       enabled: true
