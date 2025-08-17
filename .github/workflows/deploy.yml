@@ -11,19 +11,6 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  auth:
-    name: GitHub App Auth
-    runs-on: ubuntu-latest
-    outputs:
-      token: ${{ steps.app_token.outputs.token }}
-    steps:
-      - name: Generate GitHub App Token
-        id: app_token
-        uses: actions/create-github-app-token@v2
-        with:
-          app-id: ${{ secrets.GH_APP_ID }}
-          private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
-
   ci:
     name: Test
     runs-on: ubuntu-latest
@@ -143,7 +130,7 @@ jobs:
   version:
     name: Version
     runs-on: ubuntu-latest
-    needs: [ci, auth]
+    needs: ci
     permissions:
       contents: write # to be able to publish a GitHub release
       issues: write # to be able to comment on released issues
@@ -189,13 +176,19 @@ jobs:
   deploy-prod:
     name: Deploy to Prod
     runs-on: ubuntu-latest
-    needs: [version, auth]
+    needs: version
     if: github.ref == 'refs/heads/main'
     outputs:
       version: ${{ steps.get_version.outputs.version }}
     permissions:
       contents: write
     steps:
+      - name: App Token
+        id: app_token
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ secrets.GH_APP_ID }}
+          private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
         with:
           fetch-depth: 0
@@ -238,7 +231,7 @@ jobs:
         uses: dsanders11/github-app-commit-action@v1
         with:
           message: ":pushpin: Update version"
-          token: ${{ needs.auth.outputs.token }}
+          token: ${{ steps.app_token.outputs.token }}
 
       - name: Add Deployment Info to Summary
         run: |
@@ -250,13 +243,19 @@ jobs:
   deploy-dev:
     name: Deploy to Dev
     runs-on: ubuntu-latest
-    needs: [version, auth]
+    needs: version
     if: github.ref == 'refs/heads/dev'
     outputs:
       version: ${{ steps.get_version.outputs.version }}
     permissions:
       contents: write
     steps:
+      - name: App Token
+        id: app_token
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ secrets.GH_APP_ID }}
+          private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
         with:
           fetch-depth: 0
@@ -294,7 +293,7 @@ jobs:
         uses: dsanders11/github-app-commit-action@v1
         with:
           message: ":pushpin: Update version"
-          token: ${{ needs.auth.outputs.token }}
+          token: ${{ steps.app_token.outputs.token }}
 
       - name: Add Deployment Info to Summary
         run: |
