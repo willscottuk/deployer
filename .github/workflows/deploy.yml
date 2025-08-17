@@ -78,6 +78,19 @@ jobs:
           private-key: ${{ secrets.PRIVATE_KEY }}
           dep: deploy
 
+      - name: Create Sentry release
+        uses: getsentry/action-release@v3
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_TOKEN }}
+          SENTRY_ORG: ${{ vars.SENTRY_ORG }}
+          SENTRY_URL: ${{ vars.SENTRY_SERVER }}
+        with:
+          environment: production
+          release: ${{ needs.version.outputs.version }}
+          release_prefix: ${{ vars.SENTRY_PREFIX }}
+          projects: ${{ vars.SENTRY_PROJECT_ARRAY }}
+          disable_telemetry: true
+
       - name: Commit Changes
         uses: stefanzweifel/git-auto-commit-action@v5
         id: auto_commit_action
