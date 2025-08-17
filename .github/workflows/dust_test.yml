@@ -1,8 +1,6 @@
 name: Dust and Test
 
 on:
-  push:
-    branches: [dev]
   pull_request:
 
 jobs:
