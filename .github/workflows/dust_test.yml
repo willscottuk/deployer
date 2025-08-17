@@ -1,0 +1,80 @@
+name: Dust and Test
+
+on:
+  push:
+    branches: [dev]
+  pull_request:
+
+jobs:
+  duster:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+
+      - name: "Duster Fix"
+        uses: tighten/duster-action@v3
+        with:
+          args: fix
+
+      - uses: stefanzweifel/git-auto-commit-action@v5
+        id: auto_commit_action
+        with:
+          commit_message: 🚨 Fix code style
+          commit_user_name: GitHub Action
+          commit_user_email: actions@github.com
+
+      - name: Ignore Duster commit in git blame
+        if: steps.auto_commit_action.outputs.changes_detected == 'true'
+        run: echo ${{ steps.auto_commit_action.outputs.commit_hash }} >> .git-blame-ignore-revs
+
+      - uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: Ignore Dusting commit in git blame
+          commit_user_name: GitHub Action
+          commit_user_email: actions@github.com
+  ci:
+    runs-on: ubuntu-latest
+    environment: Testing
+    needs: duster
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: 8.2
+          tools: composer:v2
+          coverage: xdebug
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Install Node Dependencies
+        run: npm i
+
+      - name: Add Wire Credentials Loaded From ENV
+        run: composer config http-basic.wire-elements-pro.composer.sh ${{ secrets.WIRE_SECRET}}
+
+      - name: Install Dependencies
+        run: composer install --no-interaction --prefer-dist --optimize-autoloader
+
+      - name: Copy Environment File
+        run: cp .env.example .env
+
+      - name: Generate Application Key
+        run: php artisan key:generate
+
+      - name: Build Assets
+        run: npm run build
+
+      - name: Run Tests
+        run: ./vendor/bin/phpunit
