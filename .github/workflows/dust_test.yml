@@ -66,4 +66,67 @@ jobs:
         run: npm run build
 
       - name: Run Tests
-        run: ./vendor/bin/phpunit
+        id: tests
+        run: |
+          # Run PHPUnit with output capturing all test results
+          ./vendor/bin/phpunit --teamcity > test_output.txt || true
+
+          # Extract test counts
+          TOTAL=$(grep -c "##teamcity\[testFinished" test_output.txt)
+          FAILED=$(grep -c "##teamcity\[testFailed" test_output.txt)
+          PASSED=$((TOTAL - FAILED))
+
+          # Extract passed and failed tests into separate files
+          grep "##teamcity\[testFinished" test_output.txt | grep -v "##teamcity\[testFailed" | \
+            sed 's/##teamcity\[testFinished name='\''//g' | sed 's/'\''.*//' > passed_tests.txt
+
+          grep "##teamcity\[testFailed" test_output.txt | \
+            sed 's/##teamcity\[testFailed name='\''//g' | sed 's/'\''.*//' > failed_tests.txt
+
+          # Store test results for summary step
+          echo "total=$TOTAL" >> "$GITHUB_OUTPUT"
+          echo "passed=$PASSED" >> "$GITHUB_OUTPUT"
+          echo "failed=$FAILED" >> "$GITHUB_OUTPUT"
+
+          # Exit with error if any tests failed
+          if [ $FAILED -gt 0 ]; then
+            exit 1
+          fi
+
+      - name: Add Test Results to Summary
+        run: |
+          echo "# Deployment Summary :rocket:" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Build & Test Results" >> $GITHUB_STEP_SUMMARY
+
+          if [ "${{ steps.tests.outputs.failed }}" = "0" ]; then
+            echo "- ✅ CI Tests Passed" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "- ❌ CI Tests Failed" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Test Statistics" >> $GITHUB_STEP_SUMMARY
+          echo "- Total Tests: \`${{ steps.tests.outputs.total }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Passed: \`${{ steps.tests.outputs.passed }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- ❌ Failed: \`${{ steps.tests.outputs.failed }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # Add passed tests in expandable section
+          echo "<details><summary>✅ Passed Tests (${{ steps.tests.outputs.passed }})</summary>" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          cat passed_tests.txt >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          echo "</details>" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # Add failed tests in expandable section if any
+          if [ "${{ steps.tests.outputs.failed }}" != "0" ]; then
+            echo "<details><summary>❌ Failed Tests (${{ steps.tests.outputs.failed }})</summary>" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+            cat failed_tests.txt >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+            echo "</details>" >> $GITHUB_STEP_SUMMARY
+          fi

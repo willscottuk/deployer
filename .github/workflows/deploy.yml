@@ -79,7 +79,6 @@ jobs:
           fi
 
       - name: Add Test Results to Summary
-        if: always()
         run: |
           echo "# Deployment Summary :rocket:" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
@@ -218,6 +217,7 @@ jobs:
           commit_options: "--no-verify"
           commit_user_name: GitHub Action
           commit_user_email: actions@github.com
+          push_options: --force
           file_pattern: |
             **/*
             !.github/workflows/*
@@ -279,6 +279,7 @@ jobs:
           commit_options: "--no-verify"
           commit_user_name: GitHub Action
           commit_user_email: actions@github.com
+          push_options: --force
           file_pattern: |
             **/*
             !.github/workflows/*
