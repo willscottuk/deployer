@@ -143,6 +143,7 @@ jobs:
           release_prefix: ${{ vars.SENTRY_PREFIX }}
           projects: ${{ vars.SENTRY_PROJECT_ARRAY }}
           disable_telemetry: true
+          ignore_missing: true
 
       - name: Commit Changes
         uses: stefanzweifel/git-auto-commit-action@v5
@@ -155,16 +156,6 @@ jobs:
           file_pattern: |
             **/*
             !.github/workflows/*
-
-      - name: Ignore commit in git blame
-        if: steps.auto_commit_action.outputs.changes_detected == 'true'
-        run: echo ${{ steps.auto_commit_action.outputs.commit_hash }} >> .git-blame-ignore-revs
-
-      - uses: stefanzweifel/git-auto-commit-action@b863ae1933cb653a53c021fe36dbb774e1fb9403 # v5
-        with:
-          commit_message: ":pushpin: Ignoring version commit in git blame"
-          commit_user_name: GitHub Action
-          commit_user_email: actions@github.com
 
   deploy-dev:
     name: Deploy to Development
@@ -214,6 +205,7 @@ jobs:
           release_prefix: ${{ vars.SENTRY_PREFIX }}
           projects: ${{ vars.SENTRY_PROJECT_ARRAY }}
           disable_telemetry: true
+          ignore_missing: true
 
   sync-branch:
     name: Sync to Dev
