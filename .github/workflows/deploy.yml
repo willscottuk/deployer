@@ -129,7 +129,7 @@ jobs:
           WIRE_SECRET: ${{ secrets.WIRE_SECRET }}
         with:
           private-key: ${{ secrets.PRIVATE_KEY }}
-          dep: deploy
+          dep: deploy prod
 
       - name: Create Sentry release
         uses: getsentry/action-release@v3
@@ -196,11 +196,11 @@ jobs:
           DEPLOYER_HOSTNAME: ${{ vars.DEV_DEPLOYER_HOSTNAME }}
           DEPLOYER_PATH: ${{ vars.DEV_DEPLOYER_PATH }}
           DEPLOYER_APP: ${{ vars.DEV_DEPLOYER_APP }}
-          DEPLPOYER_REPO: ${{ vars.DEV_DEPLOYER_REPO }}
+          DEPLPOYER_REPO: ${{ vars.DEPLOYER_REPO }}
           WIRE_SECRET: ${{ secrets.WIRE_SECRET }}
         with:
           private-key: ${{ secrets.PRIVATE_KEY }}
-          dep: deploy
+          dep: deploy dev
 
       - name: Create Sentry release
         uses: getsentry/action-release@v3
@@ -214,3 +214,21 @@ jobs:
           release_prefix: ${{ vars.SENTRY_PREFIX }}
           projects: ${{ vars.SENTRY_PROJECT_ARRAY }}
           disable_telemetry: true
+
+  sync-branch:
+    name: Sync to Dev
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    needs: deploy-production
+    permissions:
+      contents: write
+      pull-requests: write
+      repository-projects: write
+    steps:
+      - name: Sync Branch
+        uses: remarkablemark/sync-branch@v1
+        with:
+          base: dev
+          title: ":twisted_rightwards_arrows: Sync back to dev"
+          body: |
+            This PR is automatically created to sync the main branch back to dev after a production deployment.
