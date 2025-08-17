@@ -70,17 +70,17 @@ jobs:
         run: |
           # Run PHPUnit and capture its exit code
           ./vendor/bin/phpunit --teamcity > test_output.txt
-          phpunit_exit_code=$?
+          # phpunit_exit_code=$?
 
-          # Extract test counts and format as markdown
-          TOTAL=$(grep -c "##teamcity\[testFinished" test_output.txt)
-          FAILED=$(grep -c "##teamcity\[testFailed" test_output.txt)
-          PASSED=$((TOTAL - FAILED))
+          # # Extract test counts and format as markdown
+          # TOTAL=$(grep -c "##teamcity\[testFinished" test_output.txt)
+          # FAILED=$(grep -c "##teamcity\[testFailed" test_output.txt)
+          # PASSED=$((TOTAL - FAILED))
 
-          # Store test results for summary step
-          echo "total=$TOTAL" >> "$GITHUB_OUTPUT"
-          echo "passed=$PASSED" >> "$GITHUB_OUTPUT"
-          echo "failed=$FAILED" >> "$GITHUB_OUTPUT"
+          # # Store test results for summary step
+          # echo "total=$TOTAL" >> "$GITHUB_OUTPUT"
+          # echo "passed=$PASSED" >> "$GITHUB_OUTPUT"
+          # echo "failed=$FAILED" >> "$GITHUB_OUTPUT"
 
       #     # Exit with PHPUnit's original exit code
       #     exit $phpunit_exit_code
