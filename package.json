@@ -20,7 +20,7 @@
         "lightningcss-linux-x64-gnu": "^1.29.1"
     },
     "devDependencies": {
-        "@semantic-release/exec": "^7.1.0",
-        "semantic-release-gitmoji": "^1.6.8"
+        "@semantic-release/exec": "7.1.0",
+        "semantic-release-gitmoji": "1.6.8"
     }
 }
