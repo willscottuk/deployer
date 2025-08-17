@@ -53,8 +53,9 @@ jobs:
       - name: Run Tests
         id: tests
         run: |
-          # Run PHPUnit with TeamCity output and store results
-          ./vendor/bin/phpunit --teamcity > test_output.txt || true
+          # Run PHPUnit and capture its exit code
+          ./vendor/bin/phpunit --teamcity > test_output.txt
+          phpunit_exit_code=$?
 
           # Extract test counts and format as markdown
           TOTAL=$(grep -c "##teamcity\[testFinished" test_output.txt)
@@ -66,10 +67,8 @@ jobs:
           echo "passed=$PASSED" >> "$GITHUB_OUTPUT"
           echo "failed=$FAILED" >> "$GITHUB_OUTPUT"
 
-          # Exit with error if any tests failed
-          if [ $FAILED -gt 0 ]; then
-            exit 1
-          fi
+          # Exit with PHPUnit's original exit code
+          exit $phpunit_exit_code
 
       - name: Add Test Results to Summary
         run: |
