@@ -143,6 +143,7 @@ jobs:
           release_prefix: ${{ vars.SENTRY_PREFIX }}
           projects: ${{ vars.SENTRY_PROJECT_ARRAY }}
           disable_telemetry: true
+          ignore_missing: true
 
       - name: Commit Changes
         uses: stefanzweifel/git-auto-commit-action@v5
@@ -204,6 +205,7 @@ jobs:
           release_prefix: ${{ vars.SENTRY_PREFIX }}
           projects: ${{ vars.SENTRY_PROJECT_ARRAY }}
           disable_telemetry: true
+          ignore_missing: true
 
   sync-branch:
     name: Sync to Dev
