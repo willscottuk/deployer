@@ -79,7 +79,7 @@ jobs:
         run: ./vendor/bin/phpunit
 
   version:
-    name: Generate Version
+    name: Version
     runs-on: ubuntu-latest
     needs: ci
     permissions:
@@ -120,7 +120,7 @@ jobs:
           path: VERSION.txt
 
   deploy-production:
-    name: Deploy to Production & Finalise Release
+    name: Deploy to Prod
     runs-on: ubuntu-latest
     needs: version
     if: github.ref == 'refs/heads/main'
@@ -187,7 +187,7 @@ jobs:
             !.github/workflows/*
 
   deploy-dev:
-    name: Deploy to Development
+    name: Deploy to Dev
     runs-on: ubuntu-latest
     needs: version
     if: github.ref == 'refs/heads/dev'
@@ -222,6 +222,18 @@ jobs:
           private-key: ${{ secrets.PRIVATE_KEY }}
           dep: deploy dev
 
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    needs:
+      - deploy-production
+      - version
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+    steps:
       - name: Create Sentry release
         uses: getsentry/action-release@526942b68292201ac6bbb99b9a0747d4abee354c # v3
         env:
@@ -237,15 +249,21 @@ jobs:
           ignore_missing: true
 
   sync-branch:
-    name: Sync to Dev
+    name: Sync
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
-    needs: deploy-production
+    needs:
+      - deploy-production
     permissions:
       contents: write
       pull-requests: write
       repository-projects: write
     steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          fetch-depth: 0
       - name: Sync Branch
         uses: remarkablemark/sync-branch@6bdd47dc563c19329241d933c9d8038f8bdaaf21 # v1
         with:
