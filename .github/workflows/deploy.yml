@@ -220,6 +220,10 @@ jobs:
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
     needs: deploy-production
+    permissions:
+      contents: write
+      pull-requests: write
+      repository-projects: write
     steps:
       - name: Sync Branch
         uses: remarkablemark/sync-branch@v1
