@@ -218,6 +218,11 @@ jobs:
       issues: write
       pull-requests: write
     steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          fetch-depth: 0
       - name: Create Sentry release
         uses: getsentry/action-release@526942b68292201ac6bbb99b9a0747d4abee354c # v3
         env:
@@ -243,6 +248,11 @@ jobs:
       issues: write
       pull-requests: write
     steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          fetch-depth: 0
       - name: Create Sentry release
         uses: getsentry/action-release@526942b68292201ac6bbb99b9a0747d4abee354c # v3
         env:
@@ -270,8 +280,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.pull_request.head.ref }}
-          repository: ${{ github.event.pull_request.head.repo.full_name }}
           fetch-depth: 0
       - name: Sync Branch
         uses: remarkablemark/sync-branch@6bdd47dc563c19329241d933c9d8038f8bdaaf21 # v1
