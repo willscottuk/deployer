@@ -11,6 +11,19 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  auth:
+    name: GitHub App Auth
+    runs-on: ubuntu-latest
+    outputs:
+      token: ${{ steps.app_token.outputs.token }}
+    steps:
+      - name: Generate GitHub App Token
+        id: app_token
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ secrets.GH_APP_ID }}
+          private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
+
   ci:
     name: Test
     runs-on: ubuntu-latest
@@ -130,7 +143,7 @@ jobs:
   version:
     name: Version
     runs-on: ubuntu-latest
-    needs: ci
+    needs: [ci, auth]
     permissions:
       contents: write # to be able to publish a GitHub release
       issues: write # to be able to comment on released issues
@@ -176,7 +189,7 @@ jobs:
   deploy-prod:
     name: Deploy to Prod
     runs-on: ubuntu-latest
-    needs: version
+    needs: [version, auth]
     if: github.ref == 'refs/heads/main'
     outputs:
       version: ${{ steps.get_version.outputs.version }}
@@ -223,6 +236,8 @@ jobs:
       - name: Commit Changes
         uses: stefanzweifel/git-auto-commit-action@778341af668090896ca464160c2def5d1d1a3eb0 # v6
         id: auto_commit_action
+        env:
+          GITHUB_TOKEN: ${{ needs.auth.outputs.token }}
         with:
           commit_message: ":pushpin: Update version"
           commit_options: "--no-verify"
@@ -243,7 +258,7 @@ jobs:
   deploy-dev:
     name: Deploy to Dev
     runs-on: ubuntu-latest
-    needs: version
+    needs: [version, auth]
     if: github.ref == 'refs/heads/dev'
     outputs:
       version: ${{ steps.get_version.outputs.version }}
@@ -285,6 +300,8 @@ jobs:
       - name: Commit Changes
         uses: stefanzweifel/git-auto-commit-action@778341af668090896ca464160c2def5d1d1a3eb0 # v6
         id: auto_commit_action
+        env:
+          GITHUB_TOKEN: ${{ needs.auth.outputs.token }}
         with:
           commit_message: ":pushpin: Update version"
           commit_options: "--no-verify"
@@ -339,7 +356,7 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
       - name: Add Related Changes to Summary
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           echo "## Related Changes" >> $GITHUB_STEP_SUMMARY
           echo "### Pull Requests" >> $GITHUB_STEP_SUMMARY
@@ -385,7 +402,7 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
       - name: Add Related Changes to Summary
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           echo "## Related Changes" >> $GITHUB_STEP_SUMMARY
           echo "### Pull Requests" >> $GITHUB_STEP_SUMMARY
