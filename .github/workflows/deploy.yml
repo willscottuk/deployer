@@ -8,7 +8,7 @@ on:
 
 concurrency:
   group: ${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   auth:
@@ -234,19 +234,11 @@ jobs:
         run: echo "version=$(cat VERSION.txt)" >> "$GITHUB_OUTPUT"
 
       - name: Commit Changes
-        uses: stefanzweifel/git-auto-commit-action@778341af668090896ca464160c2def5d1d1a3eb0 # v6
         id: auto_commit_action
-        env:
-          GITHUB_TOKEN: ${{ needs.auth.outputs.token }}
+        uses: dsanders11/github-app-commit-action@v1
         with:
-          commit_message: ":pushpin: Update version"
-          commit_options: "--no-verify"
-          commit_user_name: GitHub Action
-          commit_user_email: actions@github.com
-          push_options: --force
-          file_pattern: |
-            **/*
-            !.github/workflows/*
+          message: ":pushpin: Update version"
+          token: ${{ needs.auth.outputs.token }}
 
       - name: Add Deployment Info to Summary
         run: |
@@ -298,19 +290,11 @@ jobs:
         run: echo "version=$(cat VERSION.txt)" >> "$GITHUB_OUTPUT"
 
       - name: Commit Changes
-        uses: stefanzweifel/git-auto-commit-action@778341af668090896ca464160c2def5d1d1a3eb0 # v6
         id: auto_commit_action
-        env:
-          GITHUB_TOKEN: ${{ needs.auth.outputs.token }}
+        uses: dsanders11/github-app-commit-action@v1
         with:
-          commit_message: ":pushpin: Update version"
-          commit_options: "--no-verify"
-          commit_user_name: GitHub Action
-          commit_user_email: actions@github.com
-          push_options: --force
-          file_pattern: |
-            **/*
-            !.github/workflows/*
+          message: ":pushpin: Update version"
+          token: ${{ needs.auth.outputs.token }}
 
       - name: Add Deployment Info to Summary
         run: |
