@@ -34,7 +34,7 @@ jobs:
         run: npx semantic-release
       - name: Get version
         id: get_version
-        run: version=$(cat versionon.txt) >> "$GITHUB_OUTPUT"
+        run: version=$(cat VERSION.txt) >> "$GITHUB_OUTPUT"
       - name: Upload version artifact
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
