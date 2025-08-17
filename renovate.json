@@ -11,19 +11,33 @@
         ":semanticCommitScopeDisabled",
         ":skipStatusChecks"
     ],
-    "baseBranchPatterns": ["dev"],
-    "ignoreDeps": ["wire-elements/pro"],
+    "baseBranchPatterns": [
+        "dev"
+    ],
+    "ignoreDeps": [
+        "wire-elements/pro"
+    ],
     "packageRules": [
         {
-            "matchDatasources": ["packagist"],
-            "registryUrls": ["https://packagist.org"]
+            "matchDatasources": [
+                "packagist"
+            ],
+            "registryUrls": [
+                "https://packagist.org"
+            ]
         },
         {
             "semanticCommitType": ":arrow_up_small:",
-            "matchPackageNames": ["*"]
+            "matchPackageNames": [
+                "*"
+            ]
         },
         {
-            "matchUpdateTypes": ["lockFileMaintenance", "pin", "pinDigest"],
+            "matchUpdateTypes": [
+                "lockFileMaintenance",
+                "pin",
+                "pinDigest"
+            ],
             "semanticCommitType": ":pushpin:",
             "automerge": true,
             "labels": [
@@ -32,25 +46,39 @@
             ]
         },
         {
-            "matchUpdateTypes": ["rollback"],
+            "matchUpdateTypes": [
+                "rollback"
+            ],
             "semanticCommitType": ":arrow_down:"
         },
         {
-            "matchUpdateTypes": ["bump"],
+            "matchUpdateTypes": [
+                "bump"
+            ],
             "semanticCommitType": ":bookmark:"
         },
         {
-            "matchUpdateTypes": ["major"],
+            "matchUpdateTypes": [
+                "major"
+            ],
             "semanticCommitType": ":arrow_up:",
-            "labels": [":boom: major"],
+            "labels": [
+                ":boom: major"
+            ],
             "dependencyDashboardApproval": true
         },
         {
-            "matchUpdateTypes": ["minor"],
-            "labels": [":arrow_up_small: minor"]
+            "matchUpdateTypes": [
+                "minor"
+            ],
+            "labels": [
+                ":arrow_up_small: minor"
+            ]
         },
         {
-            "matchUpdateTypes": ["patch"],
+            "matchUpdateTypes": [
+                "patch"
+            ],
             "labels": [
                 ":arrow_up_small: minor",
                 ":twisted_rightwards_arrows: automerge"
@@ -58,7 +86,9 @@
             "automerge": true
         },
         {
-            "matchUpdateTypes": ["digest"],
+            "matchUpdateTypes": [
+                "digest"
+            ],
             "labels": [
                 ":arrow_up_small: minor",
                 ":twisted_rightwards_arrows: automerge"
@@ -66,10 +96,13 @@
             "automerge": true
         }
     ],
-    "regexManagers": [
+    "customManagers": [
         {
+            "customType": "regex",
             "description": "Update semantic-release version used by npx",
-            "fileMatch": ["^\\.github/workflows/[^/]+\\.ya?ml$"],
+            "managerFilePatterns": [
+                "/^\\.github/workflows/[^/]+\\.ya?ml$/"
+            ],
             "matchStrings": [
                 "\\srun: npx semantic-release@(?<currentValue>.*?)\\s"
             ],
