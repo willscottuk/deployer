@@ -1,4 +1,4 @@
-name: deploy
+name: Deployer
 
 on:
   push:
@@ -11,35 +11,10 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  duster:
-    name: Dust
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/dev'
-    permissions:
-      contents: write
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.pull_request.head.ref }}
-          repository: ${{ github.event.pull_request.head.repo.full_name }}
-
-      - name: "Duster Fix"
-        uses: tighten/duster-action@v3
-        with:
-          args: fix
-
-      - uses: stefanzweifel/git-auto-commit-action@v5
-        id: auto_commit_action
-        with:
-          commit_message: 🚨 Fix code style
-          commit_user_name: GitHub Action
-          commit_user_email: actions@github.com
   ci:
     name: Test
     runs-on: ubuntu-latest
     environment: Testing
-    needs: duster
-    if: always() && !failure() && !cancelled()
     steps:
       - name: Checkout
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
@@ -238,7 +213,6 @@ jobs:
     if: github.ref == 'refs/heads/main'
     needs:
       - deploy-prod
-      - version
     permissions:
       contents: write
       issues: write
@@ -264,7 +238,6 @@ jobs:
     if: github.ref == 'refs/heads/main'
     needs:
       - deploy-dev
-      - version
     permissions:
       contents: write
       issues: write
