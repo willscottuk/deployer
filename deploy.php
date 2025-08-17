@@ -34,6 +34,15 @@ host('prod')
   ->set('bin/php', 'sudo docker exec -d -t -w {{release_path}} swag php')
   ->set('bin/composer', 'sudo docker exec -t -w {{release_path}} swag /config/php/composer.phar');
 
+host('dev')
+  ->set('remote_user', getenv('DEPLOYER_USER'))
+  ->set('branch', 'dev')
+  ->set('hostname', getenv('DEPLOYER_HOSTNAME'))
+  ->set('deploy_path', getenv('DEPLOYER_PATH'))
+  ->set('bin/crontab', 'sudo /usr/bin/crontab')
+  ->set('bin/php', 'sudo docker exec -d -t -w {{release_path}} swag php')
+  ->set('bin/composer', 'sudo docker exec -t -w {{release_path}} swag /config/php/composer.phar');
+
 task('deploy', [
   'version:prepare',
   'deploy:prepare',
