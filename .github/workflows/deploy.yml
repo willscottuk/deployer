@@ -54,20 +54,31 @@ jobs:
         id: tests
         run: |
           # Run PHPUnit with output capturing all test results
-          ./vendor/bin/phpunit --teamcity > test_output.txt || true
+          # Use tee so we still see output in Actions logs
+          ./vendor/bin/phpunit --teamcity | tee test_output.txt || true
 
-          # Extract test counts
-          TOTAL=$(grep -c "##teamcity\[testFinished" test_output.txt)
-          FAILED=$(grep -c "##teamcity\[testFailed" test_output.txt)
-          PASSED=$((TOTAL - FAILED))
+          # Extract finished and failed test names
+          grep "##teamcity\[testFinished" test_output.txt \
+            | sed "s/.*name='\([^']*\)'.*/\1/" > all_finished.txt
+          grep "##teamcity\[testFailed" test_output.txt \
+            | sed "s/.*name='\([^']*\)'.*/\1/" | sort -u > failed_tests.txt
 
-          # Extract passed and failed tests into separate files
-          grep "##teamcity\[testFinished" test_output.txt | grep -v "##teamcity\[testFailed" | \
-            sed 's/##teamcity\[testFinished name='\''//g' | sed 's/'\''.*//' > passed_tests.txt
+          # Compute passed = finished − failed
+          sort -u all_finished.txt > all_finished_sorted.txt
+          comm -23 all_finished_sorted.txt failed_tests.txt > passed_tests.txt
 
-          grep "##teamcity\[testFailed" test_output.txt | \
-            sed 's/##teamcity\[testFailed name='\''//g' | sed 's/'\''.*//' > failed_tests.txt
+          # Derive counts from lists
+          TOTAL=$(wc -l < all_finished_sorted.txt)
+          FAILED=$(wc -l < failed_tests.txt)
+          PASSED=$(wc -l < passed_tests.txt)
 
+          # Clean up intermediate lists
+          rm -f all_finished.txt all_finished_sorted.txt
+
+          # Exit with error if any tests failed
+          if [ "${FAILED:-0}" -gt 0 ]; then
+            exit 1
+          fi
           # Store test results for summary step
           echo "total=$TOTAL" >> "$GITHUB_OUTPUT"
           echo "passed=$PASSED" >> "$GITHUB_OUTPUT"
