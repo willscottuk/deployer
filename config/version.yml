@@ -4,10 +4,10 @@ current:
   label: v
   major: 3
   minor: 0
-  patch: 35
-  prerelease: dev.12
+  patch: 36
+  prerelease: dev.1
   buildmetadata: ''
-  commit: af178d
+  commit: 5b7aa4
   timestamp:
     year: 2025
     month: 8
