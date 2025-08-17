@@ -75,21 +75,18 @@ jobs:
           # Clean up intermediate lists
           rm -f all_finished.txt all_finished_sorted.txt
 
-          # Exit with error if any tests failed
-          if [ "${FAILED:-0}" -gt 0 ]; then
-            exit 1
-          fi
           # Store test results for summary step
           echo "total=$TOTAL" >> "$GITHUB_OUTPUT"
           echo "passed=$PASSED" >> "$GITHUB_OUTPUT"
           echo "failed=$FAILED" >> "$GITHUB_OUTPUT"
 
           # Exit with error if any tests failed
-          if [ $FAILED -gt 0 ]; then
+          if [ "${FAILED:-0}" -gt 0 ]; then
             exit 1
           fi
 
       - name: Add Test Results to Summary
+        if: always()
         run: |
           echo "# Deployment Summary :rocket:" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
@@ -324,8 +321,6 @@ jobs:
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
         with:
-          ref: ${{ github.event.pull_request.head.ref }}
-          repository: ${{ github.event.pull_request.head.repo.full_name }}
           fetch-depth: 0
       - name: Create Sentry release
         uses: getsentry/action-release@526942b68292201ac6bbb99b9a0747d4abee354c # v3
@@ -370,8 +365,6 @@ jobs:
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
         with:
-          ref: ${{ github.event.pull_request.head.ref }}
-          repository: ${{ github.event.pull_request.head.repo.full_name }}
           fetch-depth: 0
       - name: Create Sentry release
         uses: getsentry/action-release@526942b68292201ac6bbb99b9a0747d4abee354c # v3
