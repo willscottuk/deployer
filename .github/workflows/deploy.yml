@@ -51,7 +51,81 @@ jobs:
         run: npm run build
 
       - name: Run Tests
-        run: ./vendor/bin/phpunit
+        id: tests
+        run: |
+          # Run PHPUnit with output capturing all test results
+          # Use tee so we still see output in Actions logs
+          ./vendor/bin/phpunit --teamcity | tee test_output.txt || true
+
+          # Extract finished and failed test names
+          grep "##teamcity\[testFinished" test_output.txt \
+            | sed "s/.*name='\([^']*\)'.*/\1/" > all_finished.txt
+          grep "##teamcity\[testFailed" test_output.txt \
+            | sed "s/.*name='\([^']*\)'.*/\1/" | sort -u > failed_tests.txt
+
+          # Compute passed = finished − failed
+          sort -u all_finished.txt > all_finished_sorted.txt
+          comm -23 all_finished_sorted.txt failed_tests.txt > passed_tests.txt
+
+          # Derive counts from lists
+          TOTAL=$(wc -l < all_finished_sorted.txt)
+          FAILED=$(wc -l < failed_tests.txt)
+          PASSED=$(wc -l < passed_tests.txt)
+
+          # Clean up intermediate lists
+          rm -f all_finished.txt all_finished_sorted.txt
+
+          # Exit with error if any tests failed
+          if [ "${FAILED:-0}" -gt 0 ]; then
+            exit 1
+          fi
+          # Store test results for summary step
+          echo "total=$TOTAL" >> "$GITHUB_OUTPUT"
+          echo "passed=$PASSED" >> "$GITHUB_OUTPUT"
+          echo "failed=$FAILED" >> "$GITHUB_OUTPUT"
+
+          # Exit with error if any tests failed
+          if [ $FAILED -gt 0 ]; then
+            exit 1
+          fi
+
+      - name: Add Test Results to Summary
+        run: |
+          echo "# Deployment Summary :rocket:" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Build & Test Results" >> $GITHUB_STEP_SUMMARY
+
+          if [ "${{ steps.tests.outputs.failed }}" = "0" ]; then
+            echo "- ✅ CI Tests Passed" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "- ❌ CI Tests Failed" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Test Statistics" >> $GITHUB_STEP_SUMMARY
+          echo "- Total Tests: \`${{ steps.tests.outputs.total }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Passed: \`${{ steps.tests.outputs.passed }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- ❌ Failed: \`${{ steps.tests.outputs.failed }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # Add passed tests in expandable section
+          echo "<details><summary>✅ Passed Tests (${{ steps.tests.outputs.passed }})</summary>" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          cat passed_tests.txt >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          echo "</details>" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # Add failed tests in expandable section if any
+          if [ "${{ steps.tests.outputs.failed }}" != "0" ]; then
+            echo "<details><summary>❌ Failed Tests (${{ steps.tests.outputs.failed }})</summary>" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+            cat failed_tests.txt >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+            echo "</details>" >> $GITHUB_STEP_SUMMARY
+          fi
 
   version:
     name: Version
@@ -93,6 +167,11 @@ jobs:
         with:
           name: version
           path: VERSION.txt
+      - name: Add Version Info to Summary
+        run: |
+          echo "- 📦 Version: \`$(cat VERSION.txt)\`" >> $GITHUB_STEP_SUMMARY
+          echo "- 🔗 Commit: [\`$(git rev-parse --short=6 HEAD)\`](${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/commit/$(git rev-parse HEAD))" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
 
   deploy-prod:
     name: Deploy to Prod
@@ -149,9 +228,17 @@ jobs:
           commit_options: "--no-verify"
           commit_user_name: GitHub Action
           commit_user_email: actions@github.com
+          push_options: --force
           file_pattern: |
             **/*
             !.github/workflows/*
+
+      - name: Add Deployment Info to Summary
+        run: |
+          echo "## Deployment" >> $GITHUB_STEP_SUMMARY
+          echo "- 🚀 Environment: Production" >> $GITHUB_STEP_SUMMARY
+          echo "- 🌐 URL: https://${{ vars.DEPLOYER_HOSTNAME }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
 
   deploy-dev:
     name: Deploy to Dev
@@ -203,9 +290,17 @@ jobs:
           commit_options: "--no-verify"
           commit_user_name: GitHub Action
           commit_user_email: actions@github.com
+          push_options: --force
           file_pattern: |
             **/*
             !.github/workflows/*
+
+      - name: Add Deployment Info to Summary
+        run: |
+          echo "## Deployment" >> $GITHUB_STEP_SUMMARY
+          echo "- 🚀 Environment: Development" >> $GITHUB_STEP_SUMMARY
+          echo "- 🌐 URL: https://${{ vars.DEV_DEPLOYER_HOSTNAME }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
 
   release:
     name: Release
@@ -213,6 +308,7 @@ jobs:
     if: github.ref == 'refs/heads/main'
     needs:
       - deploy-prod
+      - version
     permissions:
       contents: write
       issues: write
@@ -236,6 +332,21 @@ jobs:
           projects: ${{ vars.SENTRY_PROJECT_ARRAY }}
           disable_telemetry: true
           ignore_missing: true
+      - name: Add Monitoring Info to Summary
+        run: |
+          echo "## Monitoring" >> $GITHUB_STEP_SUMMARY
+          echo "- 📊 [Sentry Release](${{ vars.SENTRY_SERVER }}/organizations/${{ vars.SENTRY_ORG }}/releases/${{ vars.SENTRY_PREFIX }}@${{ needs.deploy-prod.outputs.version }}/)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+      - name: Add Related Changes to Summary
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "## Related Changes" >> $GITHUB_STEP_SUMMARY
+          echo "### Pull Requests" >> $GITHUB_STEP_SUMMARY
+          gh pr list --search "${{ needs.version.outputs.hash }}" --json number,title,url --jq '.[] | "- [#\(.number) \(.title)](\(.url))"' >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Issues" >> $GITHUB_STEP_SUMMARY
+          gh issue list --search "${{ needs.version.outputs.hash }}" --json number,title,url --jq '.[] | "- [#\(.number) \(.title)](\(.url))"' >> $GITHUB_STEP_SUMMARY
 
   release-dev:
     name: Release
@@ -243,6 +354,7 @@ jobs:
     if: github.ref == 'refs/heads/dev'
     needs:
       - deploy-dev
+      - version
     permissions:
       contents: write
       issues: write
@@ -266,6 +378,21 @@ jobs:
           projects: ${{ vars.SENTRY_PROJECT_ARRAY }}
           disable_telemetry: true
           ignore_missing: true
+      - name: Add Monitoring Info to Summary
+        run: |
+          echo "## Monitoring" >> $GITHUB_STEP_SUMMARY
+          echo "- 📊 [Sentry Release](${{ vars.SENTRY_SERVER }}/organizations/${{ vars.SENTRY_ORG }}/releases/${{ vars.SENTRY_PREFIX }}@${{ needs.deploy-dev.outputs.version }}/)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+      - name: Add Related Changes to Summary
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "## Related Changes" >> $GITHUB_STEP_SUMMARY
+          echo "### Pull Requests" >> $GITHUB_STEP_SUMMARY
+          gh pr list --search "${{ needs.version.outputs.hash }}" --json number,title,url --jq '.[] | "- [#\(.number) \(.title)](\(.url))"' >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Issues" >> $GITHUB_STEP_SUMMARY
+          gh issue list --search "${{ needs.version.outputs.hash }}" --json number,title,url --jq '.[] | "- [#\(.number) \(.title)](\(.url))"' >> $GITHUB_STEP_SUMMARY
 
   sync-branch:
     name: Sync
